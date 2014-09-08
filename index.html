@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Project 1: geoTanzania</title>
+		<script type="text/javascript" src="../d3/d3.v3.js"></script>
+		<style type="text/css">
+
+			circle:hover {
+				fill: orange;
+			}
+
+
+			/* No style rules here yet 
+		TO DO:
+		- Figure out the bounded bands thing (so I don't have to fuss over centering/scaling)
+		- dynamic: change population sizes based on previous censuses
+		- can i call data from other folders? why would it HAVE to be in the same folder?
+		- improve labels
+		- why doesn't hover work?
+		
+			*/		
+		</style>
+	</head>
+	<body>
+		<script type="text/javascript">
+
+			//Width and height
+			var w = 500;
+			var h = 400;
+
+
+
+
+
+			//Define map projection
+			var projection = d3.geo.mercator()
+								.rotate([-25, 0])
+								.translate([w/10, h/10])
+								.scale([8000]);
+
+			//Define path generator
+			var path = d3.geo.path()
+							 .projection(projection);
+
+			// Compute the bounds of a feature of interest, then derive scale & translate.
+			/*var b = path.bounds(features),
+			    s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
+			    t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
+
+			// Update the projection to use computed scale & translate.
+			projection
+			    .scale(s)
+			    .translate(t);*/
+
+			//Create SVG element
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h);
+
+			//Load in GeoJSON data
+			d3.json("tanzania.geo.json", function(json) {
+				
+				//Bind data and create one path per GeoJSON feature
+				svg.selectAll("path")
+				   .data(json.features)
+				   .enter()
+				   .append("path")
+				   .attr("d", path)
+				   .style("fill", "steelblue");
+		
+					d3.csv("TZcitygeo.csv", function(data) {
+
+
+						var tooltip = d3.select("body")	
+							.append("div")
+							.style("position", "absolute")
+							.style("z-index", "10")
+							.style("visibility", "hidden")
+							.text("test test 1 2 ");
+							//.text(function (d) { return d.y2012; });
+
+						svg.selectAll("circle")
+						   .data(data)
+						   .enter()
+						   .append("circle")
+						   .attr("cx", function(d) {
+							   return projection([d.lon, d.lat])[0];
+						   })
+						   .attr("cy", function(d) {
+							   return projection([d.lon, d.lat])[1];
+						   })
+						   .attr("r", function(d) {
+						   		return Math.sqrt(parseInt(d.y2012) * 0.00004);			
+						   })
+						   .style("fill", "gold")
+						   .style("opacity", 0.75)
+						   .append("title")
+						   .text(function (d) { return d.city+ " 2012 population: " + Math.round(d.y2012/100000) + "M"; })	
+						   ;
+					});
+
+					});
+
+						
+
+			
+		</script>
+	</body>
+</html>

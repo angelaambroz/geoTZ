@@ -11,6 +11,32 @@
 				fill: orange;
 			}
 
+			#tooltip {
+				position: absolute;
+				width: 200px;
+				height: auto;
+				padding: 10px;
+				background-color: white;
+				-webkit-border-radius: 10px;
+				-moz-border-radius: 10px;
+				border-radius: 10px;
+				-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				pointer-events: none;
+			}
+			
+			#tooltip.hidden {
+				display: none;
+			}
+			
+			#tooltip p {
+				margin: 0;
+				font-family: sans-serif;
+				font-size: 16px;
+				line-height: 20px;
+			}
+
 
 			/* No style rules here yet 
 		TO DO:
@@ -18,19 +44,20 @@
 		- dynamic: change population sizes based on previous censuses
 		- can i call data from other folders? why would it HAVE to be in the same folder?
 		- improve labels
-		- why doesn't hover work?
 		
 			*/		
 		</style>
 	</head>
 	<body>
+			<div id="tooltip" class="hidden" style="left: 429px, top: 489.6px">
+			<p><strong><span id="city">Dar es Salaam</span></strong></p>
+			<p id="population">Population: 44M</p>
+		</div>
 		<script type="text/javascript">
 
 			//Width and height
-			var w = 500;
-			var h = 400;
-
-
+			var w = 1200;
+			var h = 800;
 
 
 
@@ -38,7 +65,7 @@
 			var projection = d3.geo.mercator()
 								.rotate([-25, 0])
 								.translate([w/10, h/10])
-								.scale([8000]);
+								.scale([20000]);
 
 			//Define path generator
 			var path = d3.geo.path()
@@ -73,15 +100,6 @@
 		
 					d3.csv("TZcitygeo.csv", function(data) {
 
-
-						var tooltip = d3.select("body")	
-							.append("div")
-							.style("position", "absolute")
-							.style("z-index", "10")
-							.style("visibility", "hidden")
-							.text("test test 1 2 ");
-							//.text(function (d) { return d.y2012; });
-
 						svg.selectAll("circle")
 						   .data(data)
 						   .enter()
@@ -93,24 +111,41 @@
 							   return projection([d.lon, d.lat])[1];
 						   })
 						   .attr("r", function(d) {
-						   		return Math.sqrt(parseInt(d.y2012) * 0.00004);			
+						   		return Math.sqrt(parseInt(d.y2012) * 0.0004);			
 						   })
 						   .style("fill", "gold")
 						   .style("opacity", 0.75)
-						   .on("mouseover", function () { 
-						   		d3.select("circle")
-						   		.style("fill", "red");
-						   	})
+						   .on("mouseover", function (d) {
+
+						   		d3.select(this).style("fill", "orange");
+
+						   		var coordinates = [0,0];
+						   		coordinates = d3.mouse(this);
+
+								//Update the tooltip position and value
+								d3.select("#tooltip")
+								.style("left", coordinates[0] + "px")
+								.style("top", coordinates[1]-80 + "px");
+
+								d3.select("#city")
+									.text(d.city);
+
+								d3.select("#population")
+								.text(function () { return " 2012 population: " + Math.round(d.y2012/100000) + "M"; });
+				   
+								//Show the tooltip
+								d3.select("#tooltip").classed("hidden", false);
+
+			 				})
 						   .on("mouseout", function () {
-						   		d3.select("circle")
-						   		.style("fill", "gold");
-						   })
-						   .append("title")
-						   .text(function (d) { return d.city+ " 2012 population: " + Math.round(d.y2012/100000) + "M"; })	
+						   		d3.select(this).style("fill", "gold");
+						   		d3.select("#tooltip").classed("hidden", true);
+						   	})
 						   ;
-					});
 
 					});
+
+			});
 
 						
 

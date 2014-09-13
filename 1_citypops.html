@@ -13,7 +13,7 @@
 
 			#tooltip {
 				position: absolute;
-				width: 200px;
+				width: 230px;
 				height: auto;
 				padding: 10px;
 				background-color: white;
@@ -33,17 +33,23 @@
 			#tooltip p {
 				margin: 0;
 				font-family: sans-serif;
-				font-size: 16px;
+				font-size: 18px;
 				line-height: 20px;
+			}
+
+			.title {
+			  font: 300 78px Helvetica;
+			  fill: #666;
 			}
 
 
 			/* No style rules here yet 
 		TO DO:
-		- Figure out the bounded bands thing (so I don't have to fuss over centering/scaling)
-		- dynamic: change population sizes based on previous censuses
+		- dynamic: change population sizes based on previous censuses: for this i think i need to use .enter() and then select the new data points i want to use. 
 		- can i call data from other folders? why would it HAVE to be in the same folder?
-		- improve labels
+		- a giant, sans-serif title: YEAR - bottom left, i want it
+		- add a legend with data sources
+		- link back to angelaambroz.com - pig icon, "fly the pig back home"
 		
 			*/		
 		</style>
@@ -51,46 +57,41 @@
 	<body>
 			<div id="tooltip" class="hidden" style="left: 429px, top: 489.6px">
 			<p><strong><span id="city">Dar es Salaam</span></strong></p>
-			<p id="population">Population: 44M</p>
+			<p id="population">Population: 44 million</p>
 		</div>
 		<script type="text/javascript">
 
-			//Width and height
-			var w = 1200;
-			var h = 800;
+			var w = 800;
+			var h = 500;
 
-
-
-			//Define map projection
+			//so ugly. i need to learn the bounded bands thing.
 			var projection = d3.geo.mercator()
-								.rotate([-25, 0])
-								.translate([w/10, h/10])
-								.scale([20000]);
+				.rotate([-25,0])
+				.translate([w/10, h/10])
+				.scale([12000]);
 
-			//Define path generator
+
 			var path = d3.geo.path()
-							 .projection(projection);
+				.projection(projection);
 
-			// Compute the bounds of a feature of interest, then derive scale & translate.
-			/*var b = path.bounds(features),
-			    s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
-			    t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
 
-			// Update the projection to use computed scale & translate.
-			projection
-			    .scale(s)
-			    .translate(t);*/
-
-			//Create SVG element
 			var svg = d3.select("body")
-						.append("svg")
-						.attr("width", w)
-						.attr("height", h);
+				.append("svg")
+				.attr("width", w)
+				.attr("height", h);
 
-			//Load in GeoJSON data
+
+			var title = svg.append("text")
+					    .attr("class", "title")
+					    .attr("dy", (h-50) + "px")
+					    .attr("dx", "40px")
+					    .text(2012);
+
+			var comma = d3.format(",");
+
+
 			d3.json("tanzania.geo.json", function(json) {
 				
-				//Bind data and create one path per GeoJSON feature
 				svg.selectAll("path")
 				   .data(json.features)
 				   .enter()
@@ -104,36 +105,34 @@
 						   .data(data)
 						   .enter()
 						   .append("circle")
-						   .attr("cx", function(d) {
-							   return projection([d.lon, d.lat])[0];
-						   })
-						   .attr("cy", function(d) {
-							   return projection([d.lon, d.lat])[1];
-						   })
-						   .attr("r", function(d) {
-						   		return Math.sqrt(parseInt(d.y2012) * 0.0004);			
-						   })
-						   .style("fill", "gold")
-						   .style("opacity", 0.75)
+							   .attr("cx", function(d) {
+								   return projection([d.lon, d.lat])[0];
+							   })
+							   .attr("cy", function(d) {
+								   return projection([d.lon, d.lat])[1];
+							   })
+							   .attr("r", function(d) {
+							   		return Math.sqrt(parseInt(d.y2012) * 0.0004);			
+							   })
+							   .style("fill", "gold")
+							   .style("opacity", 0.75)
 						   .on("mouseover", function (d) {
 
 						   		d3.select(this).style("fill", "orange");
 
-						   		var coordinates = [0,0];
-						   		coordinates = d3.mouse(this);
+						   		var mousecoord = [0,0];
+						   		mousecoord = d3.mouse(this);
 
-								//Update the tooltip position and value
 								d3.select("#tooltip")
-								.style("left", coordinates[0] + "px")
-								.style("top", coordinates[1]-80 + "px");
+								.style("left", mousecoord[0] + "px")
+								.style("top", mousecoord[1]-80 + "px");
 
 								d3.select("#city")
 									.text(d.city);
 
 								d3.select("#population")
-								.text(function () { return " 2012 population: " + Math.round(d.y2012/100000) + "M"; });
+								.text(function () { return " 2012 population: " + comma(d.y2012); });
 				   
-								//Show the tooltip
 								d3.select("#tooltip").classed("hidden", false);
 
 			 				})

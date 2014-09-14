@@ -57,7 +57,6 @@
 			<p><strong><span id="city">Dar es Salaam</span></strong></p>
 			<p id="population">Population: 44 million</p>
 		</div>
-		<p>Test, test.</p>
 		<script type="text/javascript">
 
 			var w = 800;
@@ -79,12 +78,15 @@
 				.attr("width", w)
 				.attr("height", h);
 
+			var year0 = d3.min([1978, 1988, 2002, 2012]),
+      			year1 = d3.max([1978, 1988, 2002, 2012]),
+      			year = year1;
 
 			var title = svg.append("text")
 					    .attr("class", "title")
 					    .attr("dy", (h-50) + "px")
 					    .attr("dx", "40px")
-					    .text(2012);
+					    .text(year);
 
 			var comma = d3.format(",");
 
@@ -126,7 +128,7 @@
 
 								d3.select("#tooltip")
 								.style("left", mousecoord[0] + "px")
-								.style("top", mousecoord[1]-35 + "px");
+								.style("top", mousecoord[1]-75 + "px");
 
 								d3.select("#city")
 									.text(d.city);
@@ -144,27 +146,32 @@
 						   		d3.select("#tooltip").classed("hidden", true);
 						   	});
 
-						  //Attempting a transition
-						  d3.select(window)
-						  	.on("click", function() {
+						  
+				//Transition to 2002! and beyond...
 
-								svg.selectAll("circle")
-								   .data(data)
-								   .transition()
-								   .append("circle")
-									   .attr("cx", function(d) {
-										   return projection([d.lon, d.lat])[0];
-									   })
-									   .attr("cy", function(d) {
-										   return projection([d.lon, d.lat])[1];
-									   })
-									   .attr("r", function(d) {
-									   		return Math.sqrt(parseInt(d.y2002) * 0.0004);			
-									   })
-									   .style("fill", "gold")
-									   .style("opacity", 0.75);
+				d3.select(window).on("keydown", function() {
+					switch (d3.event.keyCode) {
+					case 37: year = Math.max(year0, year - 10); break;
+					case 39: year = Math.min(year1, year + 10); break;
+					}
+					
+					title.text(year);
 
-						  	});
+					svg.selectAll("circle")
+						.transition()
+						.attr("r", function(d) {
+							return Math.sqrt(parseInt(d.y2002) * 0.0004);  
+						})
+							
+						.on("mouseover", function (d) {
+
+							d3.select("#population")
+							.text(function () { return " 2002 population: " + comma(d.y2002); });
+						});
+
+
+
+					}); //2002 transition
 
 					}); //csv closer
 

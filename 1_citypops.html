@@ -78,8 +78,9 @@
 				.attr("width", w)
 				.attr("height", h);
 
-			var year0 = d3.min([1978, 1988, 2002, 2012]),
-      			year1 = d3.max([1978, 1988, 2002, 2012]),
+			var years = [1978, 1988, 2002, 2012]
+				year0 = d3.min(years),
+      			year1 = d3.max(years),
       			year = year1;
 
 			var title = svg.append("text")
@@ -90,7 +91,41 @@
 
 			var comma = d3.format(",");
 
+			function mouseover(d) {
 
+				d3.select(this).style("fill", "orange");
+
+				var mousecoord = [0,0];
+				mousecoord = d3.mouse(this);
+
+				d3.select("#tooltip")
+					.style("left", mousecoord[0] + "px")
+					.style("top", mousecoord[1]-75 + "px");
+
+				d3.select("#city")
+					.text(d.city);
+
+				d3.select("#population")
+					.text(function () { return year + " population: " + comma(d.y2002); });
+				   
+				d3.select("#tooltip").classed("hidden", false);
+			};
+
+			function mouseout(d) {
+				d3.select(this).style("fill", "gold");
+				d3.select("#tooltip").classed("hidden", true);
+			};
+
+			function varname(year) {
+				return "d.y" + year;
+			};
+
+			function radius() {
+				return parseInt(varname * 0.0004);
+			};
+
+
+			//Data
 			d3.json("tanzania.geo.json", function(json) {
 				
 				svg.selectAll("path")
@@ -118,60 +153,33 @@
 							   .style("fill", "gold")
 							   .style("opacity", 0.75)
 
-
-						   .on("mouseover", function (d) {
-
-						   		d3.select(this).style("fill", "orange");
-
-						   		var mousecoord = [0,0];
-						   		mousecoord = d3.mouse(this);
-
-								d3.select("#tooltip")
-								.style("left", mousecoord[0] + "px")
-								.style("top", mousecoord[1]-75 + "px");
-
-								d3.select("#city")
-									.text(d.city);
-
-								d3.select("#population")
-								.text(function () { return " 2012 population: " + comma(d.y2012); });
-				   
-								d3.select("#tooltip").classed("hidden", false);
-
-			 				})
-
-
-						   .on("mouseout", function () {
-						   		d3.select(this).style("fill", "gold");
-						   		d3.select("#tooltip").classed("hidden", true);
-						   	});
+						   .on("mouseover", mouseover)
+						   .on("mouseout", mouseout);
 
 						  
 				//Transition to 2002! and beyond...
 
 				d3.select(window).on("keydown", function() {
 					switch (d3.event.keyCode) {
-					case 37: year = Math.max(year0, year - 10); break;
-					case 39: year = Math.min(year1, year + 10); break;
+					case 37: year = Math.max(year0, year-10); break;
+					case 39: year = Math.min(year1, year+10); break;
 					}
-					
-					title.text(year);
+					update ();
+				});
 
-					svg.selectAll("circle")
-						.transition()
-						.attr("r", function(d) {
-							return Math.sqrt(parseInt(d.y2002) * 0.0004);  
+				function update() {
+
+				title.text(year);
+
+				svg.selectAll("circle")
+					.transition(1500)
+					.attr("r", function(d) {
+					return Math.sqrt(parseInt("d.y"+year) * 0.0004);  
 						})
-							
-						.on("mouseover", function (d) {
+				};
 
-							d3.select("#population")
-							.text(function () { return " 2002 population: " + comma(d.y2002); });
-						});
-
-
-
-					}); //2002 transition
+						
+					
 
 					}); //csv closer
 
